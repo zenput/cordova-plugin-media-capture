@@ -19,7 +19,7 @@
 -->
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:android="http://schemas.android.com/apk/res/andraoid"
            id="cordova-plugin-media-capture"
       version="3.0.4-dev">
     <name>Capture</name>
@@ -98,7 +98,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/mediacapture" />
         <source-file src="src/android/PendingRequests.java" target-dir="src/org/apache/cordova/mediacapture" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/mediacapture" />
-        <source-file src="src/android/xml/mediacapture_provider_paths.xml" target-dir="res/xml" />
+        <source-file src="src/android/res/xml/mediacapture_provider_paths.xml" target-dir="res/xml" />
 
         <js-module src="www/android/init.js" name="init">
             <runs />

@@ -288,7 +288,6 @@ public class Capture extends CordovaPlugin {
                       audio);
               this.audioAbsolutePath = audio.getAbsolutePath();
               intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, audioUri);
-              intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
               LOG.d(LOG_TAG, "Recording an audio and saving to: " + this.audioAbsolutePath);
               this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
         } catch (ActivityNotFoundException ex) {
@@ -327,7 +326,6 @@ public class Capture extends CordovaPlugin {
                 image);
         this.imageAbsolutePath = image.getAbsolutePath();
         intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageUri);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         LOG.d(LOG_TAG, "Taking a picture and saving to: " + this.imageAbsolutePath);
 
         this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
@@ -346,7 +344,7 @@ public class Capture extends CordovaPlugin {
 
         Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
             String timeStamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-            String fileName = "VID_" + timeStamp + ".avi";
+            String fileName = String.format("VID_%s.mp4", timeStamp);
             File movie = new File(getTempDirectoryPath(), fileName);
 
             Uri videoUri = FileProvider.getUriForFile(this.cordova.getActivity(),
@@ -354,7 +352,6 @@ public class Capture extends CordovaPlugin {
                     movie);
             this.videoAbsolutePath = movie.getAbsolutePath();
             intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, videoUri);
-            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         if(Build.VERSION.SDK_INT > 7){
             intent.putExtra("android.intent.extra.durationLimit", req.duration);
@@ -382,13 +379,13 @@ public class Capture extends CordovaPlugin {
                 public void run() {
                     switch(req.action) {
                         case CAPTURE_AUDIO:
-                            onAudioActivityResult(req, intent);
+                            onAudioActivityResult(req);
                             break;
                         case CAPTURE_IMAGE:
                             onImageActivityResult(req);
                             break;
                         case CAPTURE_VIDEO:
-                            onVideoActivityResult(req, intent);
+                            onVideoActivityResult(req);
                             break;
                     }
                 }
@@ -421,7 +418,7 @@ public class Capture extends CordovaPlugin {
     }
 
 
-    public void onAudioActivityResult(Request req, Intent intent) {
+    public void onAudioActivityResult(Request req) {
         // create a file object from the audio absolute path
         req.results.put(createMediaFileWithAbsolutePath(this.audioAbsolutePath));
 
@@ -447,7 +444,7 @@ public class Capture extends CordovaPlugin {
         }
     }
 
-    public void onVideoActivityResult(Request req, Intent intent) {
+    public void onVideoActivityResult(Request req) {
         if(this.videoAbsolutePath != null) {
             req.results.put(createMediaFileWithAbsolutePath(this.videoAbsolutePath));
         } else {
@@ -461,66 +458,6 @@ public class Capture extends CordovaPlugin {
             // still need to capture more videos
             captureVideo(req);
         }
-    }
-
-    /**
-     * Creates a JSONObject that represents a File from the Uri
-     *
-     * @param data the Uri of the audio/image/video
-     * @return a JSONObject that represents a File
-     * @throws IOException
-     */
-    private JSONObject createMediaFile(Uri data) {
-        File fp = webView.getResourceApi().mapUriToFile(data);
-        JSONObject obj = new JSONObject();
-
-        Class webViewClass = webView.getClass();
-        PluginManager pm = null;
-        try {
-            Method gpm = webViewClass.getMethod("getPluginManager");
-            pm = (PluginManager) gpm.invoke(webView);
-        } catch (NoSuchMethodException e) {
-        } catch (IllegalAccessException e) {
-        } catch (InvocationTargetException e) {
-        }
-        if (pm == null) {
-            try {
-                Field pmf = webViewClass.getField("pluginManager");
-                pm = (PluginManager)pmf.get(webView);
-            } catch (NoSuchFieldException e) {
-            } catch (IllegalAccessException e) {
-            }
-        }
-        FileUtils filePlugin = (FileUtils) pm.getPlugin("File");
-        LocalFilesystemURL url = filePlugin.filesystemURLforLocalPath(fp.getAbsolutePath());
-
-        try {
-            // File properties
-            obj.put("name", fp.getName());
-            obj.put("fullPath", Uri.fromFile(fp));
-            if (url != null) {
-                obj.put("localURL", url.toString());
-            }
-            // Because of an issue with MimeTypeMap.getMimeTypeFromExtension() all .3gpp files
-            // are reported as video/3gpp. I'm doing this hacky check of the URI to see if it
-            // is stored in the audio or video content store.
-            if (fp.getAbsoluteFile().toString().endsWith(".3gp") || fp.getAbsoluteFile().toString().endsWith(".3gpp")) {
-                if (data.toString().contains("/audio/")) {
-                    obj.put("type", AUDIO_3GPP);
-                } else {
-                    obj.put("type", VIDEO_3GPP);
-                }
-            } else {
-                obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp), cordova));
-            }
-
-            obj.put("lastModifiedDate", fp.lastModified());
-            obj.put("size", fp.length());
-        } catch (JSONException e) {
-            // this will never happen
-            e.printStackTrace();
-        }
-        return obj;
     }
 
     /**
@@ -602,24 +539,6 @@ public class Capture extends CordovaPlugin {
             null,
             null,
             null);
-    }
-
-    /**
-     * Used to find out if we are in a situation where the Camera Intent adds to images
-     * to the content store.
-     */
-    private void checkForDuplicateImage() {
-        Uri contentStore = whichContentStore();
-        Cursor cursor = queryImgDB(contentStore);
-        int currentNumOfImages = cursor.getCount();
-
-        // delete the duplicate file if the difference is 2
-        if ((currentNumOfImages - numPics) == 2) {
-            cursor.moveToLast();
-            int id = Integer.valueOf(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID))) - 1;
-            Uri uri = Uri.parse(contentStore + "/" + id);
-            this.cordova.getActivity().getContentResolver().delete(uri, null, null);
-        }
     }
 
     /**
