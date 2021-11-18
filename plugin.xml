@@ -19,7 +19,7 @@
 -->
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-xmlns:android="http://schemas.android.com/apk/res/andraoid"
+xmlns:android="http://schemas.android.com/apk/res/android"
            id="cordova-plugin-media-capture"
       version="3.0.4-dev">
     <name>Capture</name>
