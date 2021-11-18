@@ -19,9 +19,7 @@
 package org.apache.cordova.mediacapture;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -49,8 +47,6 @@ import org.json.JSONObject;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -70,6 +66,7 @@ public class Capture extends CordovaPlugin {
     private static final String AUDIO_3GPP = "audio/3gpp";
     private static final String[] AUDIO_TYPES = new String[] {"audio/3gpp", "audio/aac", "audio/amr", "audio/wav"};
     private static final String IMAGE_JPEG = "image/jpeg";
+    private static final String FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssSSS";
 
     private static final int CAPTURE_AUDIO = 0;     // Constant for capture audio
     private static final int CAPTURE_IMAGE = 1;     // Constant for capture image
@@ -270,6 +267,13 @@ public class Capture extends CordovaPlugin {
         return isMissingPermissions(req, cameraPermissions);
     }
 
+    private File createFile(String prefix, String extension) {
+        String timeStamp = new SimpleDateFormat(FILE_TIMESTAMP_FORMAT).format(new Date());
+        String filename = String.format("%s_%s.%s", prefix, timeStamp, extension);
+
+        return new File(getTempDirectoryPath(), filename);
+    }
+
     /**
      * Sets up an intent to capture audio.  Result handled by onActivityResult()
      */
@@ -279,17 +283,14 @@ public class Capture extends CordovaPlugin {
         try {
             Intent intent = new Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION);
 
-            String timeStamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-              String fileName = "AUDIO_" + timeStamp + ".wav";
-              File audio = new File(getTempDirectoryPath(), fileName);
-
-              Uri audioUri = FileProvider.getUriForFile(this.cordova.getActivity(),
+            File audio = createFile("AUDIO", "wav");
+            Uri audioUri = FileProvider.getUriForFile(this.cordova.getActivity(),
                       this.applicationId + ".cordova.plugin.mediacapture.provider",
                       audio);
-              this.audioAbsolutePath = audio.getAbsolutePath();
-              intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, audioUri);
-              LOG.d(LOG_TAG, "Recording an audio and saving to: " + this.audioAbsolutePath);
-              this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
+            this.audioAbsolutePath = audio.getAbsolutePath();
+            intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, audioUri);
+            LOG.d(LOG_TAG, "Recording an audio and saving to: " + this.audioAbsolutePath);
+            this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
         } catch (ActivityNotFoundException ex) {
             pendingRequests.resolveWithFailure(req, createErrorObject(CAPTURE_NOT_SUPPORTED, "No Activity found to handle Audio Capture."));
         }
@@ -317,10 +318,7 @@ public class Capture extends CordovaPlugin {
 
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
-        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-        String fileName = "IMG_" + timeStamp + ".jpg";
-        File image = new File(getTempDirectoryPath(), fileName);
-
+        File image = createFile("IMG", "jpg");
         Uri imageUri = FileProvider.getUriForFile(this.cordova.getActivity(),
                 this.applicationId + ".cordova.plugin.mediacapture.provider",
                 image);
@@ -343,15 +341,13 @@ public class Capture extends CordovaPlugin {
         if (isMissingCameraPermissions(req)) return;
 
         Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
-            String timeStamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-            String fileName = String.format("VID_%s.mp4", timeStamp);
-            File movie = new File(getTempDirectoryPath(), fileName);
 
-            Uri videoUri = FileProvider.getUriForFile(this.cordova.getActivity(),
-                    this.applicationId + ".cordova.plugin.mediacapture.provider",
-                    movie);
-            this.videoAbsolutePath = movie.getAbsolutePath();
-            intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, videoUri);
+        File movie = createFile("VID", "mp4");
+        Uri videoUri = FileProvider.getUriForFile(this.cordova.getActivity(),
+                this.applicationId + ".cordova.plugin.mediacapture.provider",
+                movie);
+        this.videoAbsolutePath = movie.getAbsolutePath();
+        intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, videoUri);
 
         if(Build.VERSION.SDK_INT > 7){
             intent.putExtra("android.intent.extra.durationLimit", req.duration);
