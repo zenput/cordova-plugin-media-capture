@@ -1,6 +1,6 @@
 {
-  "name": "cordova-plugin-media-capture",
-  "version": "3.0.4-dev",
+  "name": "@zenput/cordova-plugin-media-capture",
+  "version": "3.0.4-dev-zp1",
   "description": "Cordova Media Capture Plugin",
   "types": "./types/index.d.ts",
   "cordova": {
@@ -12,8 +12,13 @@
       "browser"
     ]
   },
-  "repository": "github:apache/cordova-plugin-media-capture",
-  "bugs": "https://github.com/apache/cordova-plugin-media-capture/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apache/cordova-plugin-media-capture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apache/cordova-plugin-media-capture/issues"
+  },
   "keywords": [
     "cordova",
     "media",
@@ -44,5 +49,7 @@
   },
   "devDependencies": {
     "@cordova/eslint-config": "^3.0.0"
-  }
+  },
+  "homepage": "https://github.com/apache/cordova-plugin-media-capture#readme",
+  "main": "index.js"
 }

@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-media-capture-tests",
-  "version": "3.0.4-dev",
+  "name": "@zenput/cordova-plugin-media-capture-tests",
+  "version": "3.0.4-dev-zp1",
   "description": "",
   "cordova": {
-    "id": "cordova-plugin-media-capture-tests",
+    "id": "@zenput/cordova-plugin-media-capture-tests",
     "platforms": []
   },
   "keywords": [
