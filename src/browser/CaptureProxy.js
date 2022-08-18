@@ -19,9 +19,9 @@
  *
  */
 
-var MediaFile = require('cordova-plugin-media-capture.MediaFile');
-var MediaFileData = require('cordova-plugin-media-capture.MediaFileData');
-var CaptureError = require('cordova-plugin-media-capture.CaptureError');
+var MediaFile = require('@zenput/cordova-plugin-media-capture.MediaFile');
+var MediaFileData = require('@zenput/cordova-plugin-media-capture.MediaFileData');
+var CaptureError = require('@zenput/cordova-plugin-media-capture.CaptureError');
 
 /**
  * Helper function that converts data URI to Blob
