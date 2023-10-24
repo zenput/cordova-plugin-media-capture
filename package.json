@@ -1,6 +1,6 @@
 {
   "name": "@zenput/cordova-plugin-media-capture",
-  "version": "3.0.4-dev-zp1",
+  "version": "3.0.4-dev-zp3",
   "description": "Cordova Media Capture Plugin",
   "types": "./types/index.d.ts",
   "cordova": {
